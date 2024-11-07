@@ -1,3 +1,23 @@
+Metadata-Version: 2.1
+Name: workshop_AI_Pulse
+Version: 0.0.1
+Summary: Package for representation of numerical data in format of integers or strings.
+Home-page: https://github.com/Neuralk-AI/workshop_AI_Pulse
+Author: Alexandre Pasquiou,Vladimir Kondratyev
+Author-email: alex@neuralk-ai.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE.md
+Requires-Dist: ipykernel
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Requires-Dist: ruff
+Requires-Dist: sentence-transformers
+Requires-Dist: torch
+
 # workshop_AI_Pulse: Hands-On Integration: Simulating Embedding Models for Structured Data
 
 During this workshop we will see the importance of taking into consideration the internal structure of the object that we aim to vectorize.
