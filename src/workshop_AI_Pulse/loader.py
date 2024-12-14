@@ -3,7 +3,7 @@ from typing import Optional
 
 from workshop_AI_Pulse.vectorizer import (
     BaseVectorizer,
-    VectorizerClasses,
+    VectorizerTypes,
     TextVectorizer,
     NumberVectorizer,
 )
@@ -31,6 +31,6 @@ def load_model(
         raise NotImplementedError(
             (
                 f"{embedding_type}  is not a valid  embedding_type, "
-                f"please choose one of {[element.value for element in VectorizerClasses]}."
+                f"please choose one of {[element.value for element in VectorizerTypes]}."
             )
         )

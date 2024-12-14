@@ -23,20 +23,10 @@ class BaseVectorizer:
         pass
 
 
-class VectorizerClasses(Enum):
+class VectorizerTypes(Enum):
     """
     All possible modalities that can be encoded.
     """
 
     TEXT = "text"
     NUMBER = "number"
-
-
-class NumberVectorizerClasses(Enum):
-    """
-    Methods to embed numbers.
-    """
-
-    LOGARTIHMIC = "logarithmic"
-    SIGMOID = "sigmoid"
-    SINUSOIDAL = "sinusoidal"
