@@ -13,16 +13,12 @@ class TextVectorizer(BaseVectorizer):
 
     def encode(self, input: list[int | float | str]) -> torch.Tensor:
         """
-        Encodes contextual and numerical information of input
+        Embedding model for textual input.
 
-        Parameters
-        ----------
-        input : list[int  |  float  |  str]
-            Input to be encoded.
-
-        Returns
-        -------
-        torch.Tensor
+        Args:
+            - input : list[int  |  float  |  str]
+        Returns:
+            - torch.Tensor
         """
         input_as_string = [str(sentence).lower() for sentence in input]
         embedding_as_numpy_array = np.array(

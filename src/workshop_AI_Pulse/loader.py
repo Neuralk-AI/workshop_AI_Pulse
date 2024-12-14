@@ -14,26 +14,14 @@ def load_model(
     embedding_type: str, method: Optional[str] = None, merge: str = "*"
 ) -> BaseVectorizer:
     """
-    Create embedding model from accessible list of classes.
+    Load an embedding model from its name.
 
-    Parameters
-    ----------
-    embedding_type : str
-        Modality to encode.
-        Has to one of 'text', 'number'.
-    method : Optional[str]
-        Type of encoding scheme.
-        Has to one of 'language_model', 'logarithmic', 'sigmoid', 'sinusoidal'.
+    Args:
+        - embedding_type : str ('text', 'number')
+        - method : Optional[str] ('sinusoid', 'sigmoid', 'logarithmic')
 
-    Returns
-    -------
-    BaseVectorizer
-        Instance of embedding model
-
-    Raises
-    ------
-    RuntimeError
-        If embedding type is not supported it will raise a runtime error.
+    Returns:
+        - BaseVectorizer
     """
     if embedding_type == "number":
         return NumberVectorizer(method=method, merge=merge)

@@ -5,25 +5,27 @@ import torch
 
 class BaseVectorizer:
     """
-    Base class to template common methods.
+    Base class  for all vectorizers.
     """
 
     def __init__(self):
-        # Initialize vectorizer configuration and resources
         pass
 
     def encode(self, input: list[int | float | str]) -> torch.Tensor:
         """
-        Encodes input into embedding space.
-        :param input: List of integers, floats, or strings.
-        :return: A PyTorch tensor representing the input in embedding space.
+        Use an embedding model to encode an input into an embedding space.
+
+        Args:
+            - input : list[int  |  float  |  str]
+        Returns:
+            - torch.Tensor
         """
         pass
 
 
 class VectorizerClasses(Enum):
     """
-    Accesible embedding types.
+    All possible modalities that can be encoded.
     """
 
     TEXT = "text"
@@ -32,7 +34,7 @@ class VectorizerClasses(Enum):
 
 class NumberVectorizerClasses(Enum):
     """
-    Accesible number embedding types.
+    Methods to embed numbers.
     """
 
     LOGARTIHMIC = "logarithmic"

@@ -23,16 +23,13 @@ class NumberVectorizer(BaseVectorizer):
         self, input: list[int | float | str], threshold: int = None
     ) -> torch.Tensor:
         """
-        Encodes contextual and numerical information of input
+        Project the input into a latent space.
 
-        Parameters
-        ----------
-        input : list[int  |  float  |  str]
-            Input to be encoded.
+        Args:
+            - input : list[int  |  float  |  str]
 
-        Returns
-        -------
-        torch.Tensor
+        Returns:
+            - torch.Tensor
         """
         numbers_from_inputs = torch.Tensor(
             [self.extract_number(sentence) for sentence in input]
@@ -65,56 +62,44 @@ class NumberVectorizer(BaseVectorizer):
             return torch.cat([numerical_embeddings, contextual_embeddings], dim=-1)
         else:
             raise NotImplementedError("TODO")
-
-    def extract_number(self, input: int | float | str) -> float:
+        
+    
+    def extract_number(self, input_value: int | float | str) -> float:
         """
-        Extracts number from a sentence. i.e.
-            '2 dollars' -> 2
+        Extract a number from the input. If no number is found, returns NaN.
 
-        Parameters
-        ----------
-        input : int | float | str
-            Sentence containing a number. If no number found returns -1.
-
-        Returns
-        -------
-        float
+        Args:
+            - input_value : int | float | str
+        Returns:
+            - float
         """
-        if type(input) is str:
-            for possible_number in input.split(" "):
+        if isinstance(input_value, (int, float)):
+            return float(input_value)
+        if isinstance(input_value, str):
+            for token in input_value.split():
                 try:
-                    return float(possible_number)
+                    return float(token)
                 except ValueError:
                     continue
-        else:
-            return float(input)
-
         return float("nan")
 
-    def extract_text(self, input: int | float | str) -> float:
-        """
-        Extracts text from a sentence. i.e.
-            '2 dollars' -> '2 dollars'
-            'dollars' -> 'dollars'
-            2 -> None
-            '2' -> None
 
-        Parameters
-        ----------
-        input : int | float | str
-            Sentence containing a number. If no number found returns -1.
-
-        Returns
-        -------
-        float
+    def extract_text(input_value: int | float | str) -> str | None:
         """
-        if isinstance(input, float) or isinstance(input, int):
+        Extract the text from the input. If the input is a number or can be cast to one, returns None.
+
+        Args:
+            - input_value : int | float | str
+        Returns:
+            - str | None
+        """
+        if isinstance(input_value, (int, float)):
             return None
         try:
-            _ = float(input)
+            _ = float(input_value)
             return None
         except ValueError:
-            return input
+            return input_value
 
     def encode_numbers(
         self, input: torch.Tensor, threshold: int = None
@@ -122,14 +107,12 @@ class NumberVectorizer(BaseVectorizer):
         """
         Sigmoid type embedding of logarithm of input. e.g. sigmoid(log(input + 1))
 
-        Parameters
-        ----------
-        x : torch.FloatTensor
+        Args:
+            - x : torch.FloatTensor
             torch tensor of shape N with numbers as float or int.
 
-        Returns
-        -------
-        torch.Tensor
+        Returns:
+            - torch.Tensor
         """
         if self.method == "sinusoid":
             return self.encode_sinusoid(input=input, threshold=threshold)
@@ -139,88 +122,77 @@ class NumberVectorizer(BaseVectorizer):
             return self.encode_logarithmic(input=input, threshold=threshold)
         else:
             raise NotImplementedError("TODO")
-
-    def encode_sigmoid(
-        self, input: torch.Tensor, threshold: int = None
-    ) -> torch.Tensor:
+        
+    def encode_sigmoid(self, input_tensor: torch.Tensor, threshold: float = 0.0) -> torch.Tensor:
         """
-        Sigmoid type embedding of logarithm of input. e.g. sigmoid(log(input + 1))
+        Apply a sigmoid-like transformation to the logarithm of the input.
 
-        Parameters
-        ----------
-        x : torch.FloatTensor
-            torch tensor of shape N with numbers as float or int.
+        Args:
+            - input_tensor : torch.Tensor
+            Tensor of shape (N,) with numeric values.
+            - threshold : float, optional
+            Value to shift the input by, default is 0.0.
 
-        Returns
-        -------
-        torch.Tensor
+        Returns:
+            - torch.Tensor
+            Transformed tensor of shape (N, 1).
         """
-        # We shift the input to remove negative values
-        threshold = threshold if threshold is not None else 0  # torch.min(input).item()
-        input -= threshold
-        input = torch.nan_to_num(input)
-        extended_input = input.unsqueeze(1)
+        input_tensor = torch.nan_to_num(input_tensor - threshold)
+        return 2 - 1 / (2 + input_tensor.unsqueeze(-1))
 
-        return 2 - 1 / (2 + extended_input)
-
-    def encode_logarithmic(
-        self, input: torch.Tensor, threshold: int = None
-    ) -> torch.Tensor:
+    def encode_logarithmic(self, input_tensor: torch.Tensor, threshold: float = None) -> torch.Tensor:
         """
-        Shifted logarithmical embedding. e.g. log(input + 1 + e)
+        Apply a shifted logarithmic transformation to the input.
 
-        Parameters
-        ----------
-        x : torch.FloatTensor
-            torch tensor of shape N with numbers as float or int.
+        Args:
+            - input_tensor : torch.Tensor
+            Tensor of shape (N,) with numeric values.
+            - threshold : float, optional
+            Value to shift the input by. Default is the minimum value in the tensor.
 
-        Returns
-        -------
-        torch.Tensor
+        Returns:
+            - torch.Tensor
+            Transformed tensor of shape (N, 1).
         """
-        # We shift the input to remove negative values
-        threshold = threshold if threshold is not None else torch.min(input).item()
-        input -= threshold
-        input = torch.nan_to_num(input)
-        extended_input = input.unsqueeze(1)
+        if threshold is None:
+            threshold = input_tensor.min().item()
+        input_tensor = torch.nan_to_num(input_tensor - threshold)
+        return torch.log(input_tensor.unsqueeze(-1) + 1 + torch.e)
 
-        return torch.log(extended_input + 1 + torch.e)
 
-    def encode_sinusoid(
-        self, input: torch.Tensor, threshold: int = None
-    ) -> torch.Tensor:
+    def encode_sinusoid(self, input_tensor: torch.Tensor, division_term: torch.Tensor) -> torch.Tensor:
         """
-        Sinusoidal encoding from original transformers paper.
+        Compute sinusoidal encoding as in the original Transformer paper.
 
-        Example:
-        >>> x = torch.Tensor([0, 1, 2])
-        >>> sinusoidal_encoding(x) # embedding size is explicitly assumed to be 2
-        tensor([[ 0.8415,  0.5403],
-                [ 0.9093, -0.4161],
-                [ 0.1411, -0.9900]])
+        Args:
+            - input_tensor : torch.Tensor
+            Tensor of shape (N,) with numeric values.
+            - division_term : torch.Tensor
+            Precomputed division term for sinusoidal encoding.
 
-        Parameters
-        ----------
-        x : torch.FloatTensor
-            torch tensor of shape N with numbers as float or int.
-
-        Returns
-        -------
-        torch.Tensor
+        Returns:
+            - torch.Tensor
+            Sinusoidally encoded tensor.
         """
-        sinusoid_arguments = input.unsqueeze(1) + 1 * self.division_term
-        print(sinusoid_arguments.shape)
-        output = torch.empty_like(sinusoid_arguments)
-        output[:, ::2] = torch.sin(sinusoid_arguments[:, ::2])
-        output[:, 1::2] = torch.cos(sinusoid_arguments[:, 1::2])
-        return output
+        # Expand input_tensor to shape (N, 1) and broadcast with division_term (D,)
+        sinusoid_args = input_tensor.unsqueeze(-1) * division_term
+
+        # Compute sinusoidal encodings
+        sin_encodings = torch.sin(sinusoid_args[:, 0::2])  # Even indices
+        cos_encodings = torch.cos(sinusoid_args[:, 1::2])  # Odd indices
+
+        # Concatenate sin and cos encodings along the last dimension
+        encoded = torch.empty_like(sinusoid_args)
+        encoded[:, 0::2] = sin_encodings
+        encoded[:, 1::2] = cos_encodings
+        
+        return encoded
 
     def init_method_params(self):
         """Initialize custom aprameters depending on the method chosen.
 
-        Parameters
-        ----------
-        method : str
+        Args:
+            - method : str
             name of the encoding method
         """
         if self.method == "sinusoid":
